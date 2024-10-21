@@ -8,10 +8,18 @@ use KaririCode\Validator\Processor\AbstractValidatorProcessor;
 
 class EmailValidator extends AbstractValidatorProcessor
 {
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        $input = $this->guardAgainstNonString($input);
+        if (!is_string($input)) {
+            $this->setInvalid('invalidType');
 
-        return false !== filter_var($input, FILTER_VALIDATE_EMAIL);
+            return $input;
+        }
+
+        if (false === filter_var($input, FILTER_VALIDATE_EMAIL)) {
+            $this->setInvalid('invalidFormat');
+        }
+
+        return $input;
     }
 }

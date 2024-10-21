@@ -9,11 +9,10 @@ use KaririCode\Contract\Validator\Validator as ValidatorContract;
 use KaririCode\ProcessorPipeline\ProcessorBuilder;
 use KaririCode\PropertyInspector\AttributeAnalyzer;
 use KaririCode\PropertyInspector\AttributeHandler;
-use KaririCode\PropertyInspector\Contract\PropertyAttributeHandler;
-use KaririCode\PropertyInspector\Contract\PropertyChangeApplier;
-use KaririCode\PropertyInspector\Exception\PropertyInspectionException;
 use KaririCode\PropertyInspector\Utility\PropertyInspector;
 use KaririCode\Validator\Attribute\Validate;
+use KaririCode\Validator\Contract\ValidationResultProcessor;
+use KaririCode\Validator\Processor\DefaultValidationResultProcessor;
 
 class Validator implements ValidatorContract
 {
@@ -21,10 +20,12 @@ class Validator implements ValidatorContract
 
     private ProcessorBuilder $builder;
     private PropertyInspector $propertyInspector;
-    private PropertyAttributeHandler&PropertyChangeApplier $attributeHandler;
+    private AttributeHandler $attributeHandler;
 
-    public function __construct(private readonly ProcessorRegistry $registry)
-    {
+    public function __construct(
+        private readonly ProcessorRegistry $registry,
+        private readonly ValidationResultProcessor $resultProcessor = new DefaultValidationResultProcessor()
+    ) {
         $this->builder = new ProcessorBuilder($this->registry);
         $this->attributeHandler = new AttributeHandler(self::IDENTIFIER, $this->builder);
         $this->propertyInspector = new PropertyInspector(
@@ -32,24 +33,10 @@ class Validator implements ValidatorContract
         );
     }
 
-    public function validate(mixed $object): array
+    public function validate(mixed $object): ValidationResult
     {
-        try {
-            var_dump($object, $this->attributeHandler);
-            $validationResults = $this->propertyInspector->inspect($object, $this->attributeHandler);
+        $handler = $this->propertyInspector->inspect($object, $this->attributeHandler);
 
-            $errors = [];
-            foreach ($validationResults as $property => $result) {
-                if (false === $result) {
-                    $errors[$property] = ["Validation failed for {$property}"];
-                } elseif (is_string($result)) {
-                    $errors[$property] = [$result];
-                }
-            }
-
-            return $errors;
-        } catch (PropertyInspectionException $e) {
-            return ['__exception' => [$e->getMessage()]];
-        }
+        return $this->resultProcessor->process($handler);
     }
 }

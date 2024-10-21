@@ -8,15 +8,20 @@ use KaririCode\Validator\Processor\AbstractValidatorProcessor;
 
 class RequiredValidator extends AbstractValidatorProcessor
 {
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        if (is_string($input)) {
-            return '' !== trim($input);
-        }
-        if (is_numeric($input)) {
-            return true;
+        if ($this->isEmpty($input)) {
+            $this->setInvalid('missingValue');
         }
 
-        return null !== $input;
+        return $input;
+    }
+
+    private function isEmpty(mixed $value): bool
+    {
+        return null === $value
+            || '' === $value
+            || (is_string($value) && '' === trim($value))
+            || (is_array($value) && 0 === count($value));
     }
 }

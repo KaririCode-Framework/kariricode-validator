@@ -14,18 +14,24 @@ class RangeValidator extends AbstractValidatorProcessor implements ConfigurableP
 
     public function configure(array $options): void
     {
-        if (!isset($options['min']) || !isset($options['max'])) {
-            throw new \InvalidArgumentException('Both "min" and "max" options must be set.');
-        }
-        $this->min = $options['min'];
-        $this->max = $options['max'];
+        $this->min = $options['min'] ?? PHP_FLOAT_MIN;
+        $this->max = $options['max'] ?? PHP_FLOAT_MAX;
     }
 
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        var_dump($input);
+        if (!is_numeric($input)) {
+            $this->setInvalid('notNumeric');
+
+            return $input;
+        }
+
         $value = (float) $input;
 
-        return $value >= $this->min && $value <= $this->max;
+        if ($value < $this->min || $value > $this->max) {
+            $this->setInvalid('outOfRange');
+        }
+
+        return $value;
     }
 }

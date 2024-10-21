@@ -5,18 +5,28 @@ declare(strict_types=1);
 namespace KaririCode\Validator\Processor;
 
 use KaririCode\Contract\Processor\Processor;
-use KaririCode\Validator\Exception\ValidationException;
+use KaririCode\Contract\Processor\ValidatableProcessor;
 
-abstract class AbstractValidatorProcessor implements Processor
+abstract class AbstractValidatorProcessor implements Processor, ValidatableProcessor
 {
-    protected function guardAgainstNonString(mixed $input): string
-    {
-        if (!is_string($input)) {
-            throw new ValidationException('Input must be a string');
-        }
+    protected bool $isValid = true;
+    protected string $errorKey = '';
 
-        return $input;
+    protected function setInvalid(string $errorKey): void
+    {
+        $this->isValid = false;
+        $this->errorKey = $errorKey;
     }
 
-    abstract public function process(mixed $input): bool;
+    public function isValid(): bool
+    {
+        return $this->isValid;
+    }
+
+    public function getErrorKey(): string
+    {
+        return $this->errorKey;
+    }
+
+    abstract public function process(mixed $input): mixed;
 }

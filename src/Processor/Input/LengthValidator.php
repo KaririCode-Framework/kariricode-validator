@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KaririCode\Validator\Processor\Input;
 
 use KaririCode\Contract\Processor\ConfigurableProcessor;
+use KaririCode\Validator\Exception\MissingProcessorConfigException;
 use KaririCode\Validator\Processor\AbstractValidatorProcessor;
 
 class LengthValidator extends AbstractValidatorProcessor implements ConfigurableProcessor
@@ -14,19 +15,38 @@ class LengthValidator extends AbstractValidatorProcessor implements Configurable
 
     public function configure(array $options): void
     {
-        if (isset($options['minLength'])) {
-            $this->minLength = $options['minLength'];
+        if (empty($options)) {
+            throw MissingProcessorConfigException::missingConfiguration('LengthValidator', 'Configuration is empty');
         }
-        if (isset($options['maxLength'])) {
-            $this->maxLength = $options['maxLength'];
+
+        if (!isset($options['minLength'])) {
+            throw MissingProcessorConfigException::missingConfiguration('LengthValidator', 'minLength');
         }
+
+        if (!isset($options['maxLength'])) {
+            throw MissingProcessorConfigException::missingConfiguration('LengthValidator', 'maxLength');
+        }
+
+        $this->minLength = $options['minLength'];
+        $this->maxLength = $options['maxLength'];
     }
 
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        $input = $this->guardAgainstNonString($input);
+        if (!is_string($input)) {
+            $this->setInvalid('invalidType');
+
+            return $input;
+        }
+
         $length = mb_strlen($input);
 
-        return $length >= $this->minLength && $length <= $this->maxLength;
+        if ($length < $this->minLength) {
+            $this->setInvalid('tooShort');
+        } elseif ($length > $this->maxLength) {
+            $this->setInvalid('tooLong');
+        }
+
+        return $input;
     }
 }

@@ -18,12 +18,20 @@ class DateFormatValidator extends AbstractValidatorProcessor implements Configur
         }
     }
 
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        $input = $this->guardAgainstNonString($input);
+        if (!is_string($input)) {
+            $this->setInvalid('invalidType');
+
+            return $input;
+        }
 
         $date = \DateTime::createFromFormat($this->format, $input);
 
-        return $date && $date->format($this->format) === $input;
+        if (!$date || $date->format($this->format) !== $input) {
+            $this->setInvalid('invalidFormat');
+        }
+
+        return $input;
     }
 }

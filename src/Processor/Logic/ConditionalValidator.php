@@ -15,21 +15,25 @@ class ConditionalValidator extends AbstractValidatorProcessor implements Configu
     public function configure(array $options): void
     {
         if (!isset($options['condition']) || !($options['condition'] instanceof \Closure)) {
-            throw new \InvalidArgumentException('A valid condition closure must be provided.');
-        }
-        if (!isset($options['validator']) || !($options['validator'] instanceof \Closure)) {
-            throw new \InvalidArgumentException('A valid validator closure must be provided.');
+            throw new \InvalidArgumentException('Condition must be a Closure');
         }
         $this->condition = $options['condition'];
+
+        if (!isset($options['validator']) || !($options['validator'] instanceof \Closure)) {
+            throw new \InvalidArgumentException('Validator must be a Closure');
+        }
         $this->validator = $options['validator'];
     }
 
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
         if (($this->condition)($input)) {
-            return ($this->validator)($input);
+            $validationResult = ($this->validator)($input);
+            if (true !== $validationResult) {
+                $this->setInvalid('conditionNotMet');
+            }
         }
 
-        return true;
+        return $input;
     }
 }

@@ -8,8 +8,12 @@ use KaririCode\Validator\Processor\AbstractValidatorProcessor;
 
 class IntegerValidator extends AbstractValidatorProcessor
 {
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        return is_int($input) || (is_string($input) && ctype_digit($input));
+        if (!is_int($input) && (!is_string($input) || !ctype_digit($input))) {
+            $this->setInvalid('notAnInteger');
+        }
+
+        return $input;
     }
 }

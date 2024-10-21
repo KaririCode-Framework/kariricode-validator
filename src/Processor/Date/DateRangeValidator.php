@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KaririCode\Validator\Processor\Date;
+namespace KaririCode\Validator\Processor\Numeric;
 
 use KaririCode\Contract\Processor\ConfigurableProcessor;
 use KaririCode\Validator\Processor\AbstractValidatorProcessor;
@@ -16,43 +16,50 @@ class DateRangeValidator extends AbstractValidatorProcessor implements Configura
     public function configure(array $options): void
     {
         if (!isset($options['minDate']) || !isset($options['maxDate'])) {
-            throw new \InvalidArgumentException('Both "minDate" and "maxDate" options must be set.');
+            throw new \InvalidArgumentException('Both minDate and maxDate must be provided');
         }
 
-        $this->setDate('minDate', $options['minDate']);
-        $this->setDate('maxDate', $options['maxDate']);
+        $this->minDate = $this->parseDate($options['minDate']);
+        $this->maxDate = $this->parseDate($options['maxDate']);
+
+        if ($this->minDate > $this->maxDate) {
+            throw new \InvalidArgumentException('minDate must be less than or equal to maxDate');
+        }
 
         if (isset($options['format'])) {
             $this->format = $options['format'];
         }
-
-        if ($this->minDate > $this->maxDate) {
-            throw new \InvalidArgumentException('minDate cannot be greater than maxDate.');
-        }
     }
 
-    public function process(mixed $input): bool
+    public function process(mixed $input): mixed
     {
-        var_dump($input);
-        $input = $this->guardAgainstNonString($input);
+        if (!is_string($input)) {
+            $this->setInvalid('invalidType');
+
+            return $input;
+        }
 
         $date = \DateTime::createFromFormat($this->format, $input);
-        if (!$date) {
-            return false;
+        if (!$date || $date->format($this->format) !== $input) {
+            $this->setInvalid('invalidDate');
+
+            return $input;
         }
 
-        $date->setTime(0, 0, 0);
+        if ($date < $this->minDate || $date > $this->maxDate) {
+            $this->setInvalid('outOfRange');
+        }
 
-        return $date >= $this->minDate && $date <= $this->maxDate;
+        return $input;
     }
 
-    private function setDate(string $type, string $dateString): void
+    private function parseDate(string $date): \DateTimeInterface
     {
-        $date = \DateTime::createFromFormat($this->format, $dateString);
-        if (!$date) {
-            throw new \InvalidArgumentException(sprintf('Invalid %s format. Expected format: %s', $type, $this->format));
+        $parsedDate = \DateTime::createFromFormat($this->format, $date);
+        if (!$parsedDate) {
+            throw new \InvalidArgumentException("Invalid date format. Expected: {$this->format}");
         }
-        $date->setTime(0, 0, 0);
-        $this->{$type} = $date;
+
+        return $parsedDate;
     }
 }
