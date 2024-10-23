@@ -20,7 +20,7 @@ final class ConditionalValidatorTest extends TestCase
     {
         $this->validator->configure([
             'condition' => fn ($input) => $input > 0,
-            'validator' => fn ($input) => $input < 10
+            'validator' => fn ($input) => $input < 10,
         ]);
 
         $this->validator->process(5);
@@ -33,7 +33,7 @@ final class ConditionalValidatorTest extends TestCase
     {
         $this->validator->configure([
             'condition' => fn ($input) => $input > 0,
-            'validator' => fn ($input) => $input < 10
+            'validator' => fn ($input) => $input < 10,
         ]);
 
         $this->validator->process(15);
@@ -46,7 +46,7 @@ final class ConditionalValidatorTest extends TestCase
     {
         $this->validator->configure([
             'condition' => fn ($input) => $input > 100,
-            'validator' => fn ($input) => $input < 10
+            'validator' => fn ($input) => $input < 10,
         ]);
 
         $this->validator->process(50);
@@ -59,7 +59,7 @@ final class ConditionalValidatorTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->validator->configure([
-            'validator' => fn ($input) => true
+            'validator' => fn ($input) => true,
         ]);
     }
 
@@ -67,7 +67,7 @@ final class ConditionalValidatorTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->validator->configure([
-            'condition' => fn ($input) => true
+            'condition' => fn ($input) => true,
         ]);
     }
 }
