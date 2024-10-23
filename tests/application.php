@@ -11,7 +11,6 @@ use KaririCode\Validator\Processor\Date\DateFormatValidator;
 use KaririCode\Validator\Processor\Input\EmailValidator;
 use KaririCode\Validator\Processor\Input\LengthValidator;
 use KaririCode\Validator\Processor\Input\UrlValidator;
-use KaririCode\Validator\Processor\Logic\ConditionalValidator;
 use KaririCode\Validator\Processor\Logic\RequiredValidator;
 use KaririCode\Validator\Processor\Numeric\IntegerValidator;
 use KaririCode\Validator\Processor\Numeric\RangeValidator;
@@ -153,7 +152,6 @@ $registry->register('validator', 'integer', new IntegerValidator());
 $registry->register('validator', 'range', new RangeValidator());
 $registry->register('validator', 'url', new UrlValidator());
 $registry->register('validator', 'dateFormat', new DateFormatValidator());
-$registry->register('validator', 'conditional', new ConditionalValidator());
 
 $validator = new Validator($registry);
 
