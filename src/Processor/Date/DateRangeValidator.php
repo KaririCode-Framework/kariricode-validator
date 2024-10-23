@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace KaririCode\Validator\Processor\Numeric;
+namespace KaririCode\Validator\Processor\Date;
 
 use KaririCode\Contract\Processor\ConfigurableProcessor;
+use KaririCode\Validator\Exception\DateValidatorException;
+use KaririCode\Validator\Exception\MissingProcessorConfigException;
 use KaririCode\Validator\Processor\AbstractValidatorProcessor;
 
 class DateRangeValidator extends AbstractValidatorProcessor implements ConfigurableProcessor
@@ -15,19 +17,23 @@ class DateRangeValidator extends AbstractValidatorProcessor implements Configura
 
     public function configure(array $options): void
     {
-        if (!isset($options['minDate']) || !isset($options['maxDate'])) {
-            throw new \InvalidArgumentException('Both minDate and maxDate must be provided');
+        if (!isset($options['minDate'])) {
+            throw MissingProcessorConfigException::missingConfiguration('DateRangeValidator', 'minDate');
         }
 
-        $this->minDate = $this->parseDate($options['minDate']);
-        $this->maxDate = $this->parseDate($options['maxDate']);
-
-        if ($this->minDate > $this->maxDate) {
-            throw new \InvalidArgumentException('minDate must be less than or equal to maxDate');
+        if (!isset($options['maxDate'])) {
+            throw MissingProcessorConfigException::missingConfiguration('DateRangeValidator', 'maxDate');
         }
 
         if (isset($options['format'])) {
             $this->format = $options['format'];
+        }
+
+        $this->minDate = self::parseDate($options['minDate'], $this->format);
+        $this->maxDate = self::parseDate($options['maxDate'], $this->format);
+
+        if ($this->minDate > $this->maxDate) {
+            throw MissingProcessorConfigException::missingConfiguration('DateRangeValidator', 'minDate and maxDate order');
         }
     }
 
@@ -53,11 +59,11 @@ class DateRangeValidator extends AbstractValidatorProcessor implements Configura
         return $input;
     }
 
-    private function parseDate(string $date): \DateTimeInterface
+    private static function parseDate(string $date, string $format): \DateTimeInterface
     {
-        $parsedDate = \DateTime::createFromFormat($this->format, $date);
-        if (!$parsedDate) {
-            throw new \InvalidArgumentException("Invalid date format. Expected: {$this->format}");
+        $parsedDate = \DateTime::createFromFormat($format, $date);
+        if (!$parsedDate || $parsedDate->format($format) !== $date) {
+            throw DateValidatorException::invalidDateFormat($format, $date);
         }
 
         return $parsedDate;
