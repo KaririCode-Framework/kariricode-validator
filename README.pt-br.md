@@ -1,4 +1,4 @@
-# Framework KaririCode: Componente Validator
+# Framework KaririCode: Validator Component
 
 Um componente de validação de dados poderoso e flexível para PHP, parte do Framework KaririCode. Utiliza validação baseada em atributos com processadores configuráveis para garantir a integridade e validação dos dados em suas aplicações.
 

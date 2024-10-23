@@ -1,6 +1,6 @@
 {
   "name": "kariricode/validator",
-  "description": "A robust and flexible data sanitization component for PHP, part of the KaririCode Framework, utilizing configurable processors and native functions.",
+  "description": "A powerful and flexible validation component for PHP, part of the KaririCode Framework. It provides configurable processors for validating data attributes in entities using a streamlined and efficient pipeline system.",
   "keywords": [
     "kariricode",
     "validator",
