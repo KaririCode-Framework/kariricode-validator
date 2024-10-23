@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KaririCode\Validator\Tests\Processor\Date;
 
+use KaririCode\Validator\Exception\DateValidatorException;
 use KaririCode\Validator\Exception\MissingProcessorConfigException;
 use KaririCode\Validator\Processor\Date\DateRangeValidator;
 use PHPUnit\Framework\TestCase;
@@ -119,5 +120,21 @@ final class DateRangeValidatorTest extends TestCase
 
         $this->assertTrue($this->validator->isValid());
         $this->assertEmpty($this->validator->getErrorKey());
+    }
+
+    public function testInvalidDateFormatForBothDates(): void
+    {
+        $format = 'Y-m-d';
+        $minDate = '01/01/2024';
+
+        $this->expectException(DateValidatorException::class);
+        $this->expectExceptionMessage(
+            sprintf("Invalid date format. Expected: '%s', but got: '%s'.", $format, $minDate)
+        );
+
+        $this->validator->configure([
+            'minDate' => $minDate,
+            'maxDate' => '31/12/2024',
+        ]);
     }
 }
