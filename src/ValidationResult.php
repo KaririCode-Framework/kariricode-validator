@@ -10,20 +10,35 @@ class ValidationResult implements ValidationResultContract
 {
     private array $errors = [];
     private array $validatedData = [];
+    private array $errorHashes = [];
+
+    /**
+     * Reset all validation state.
+     *
+     * Clears all errors, validation data, and error hashes,
+     * returning the ValidationResult to its initial state.
+     */
+    public function reset(): void
+    {
+        $this->errors = [];
+        $this->validatedData = [];
+        $this->errorHashes = [];
+    }
 
     public function addError(string $property, string $errorKey, string $message): void
     {
         if (!isset($this->errors[$property])) {
             $this->errors[$property] = [];
+            $this->errorHashes[$property] = [];
         }
 
         // Avoid adding duplicate errors
-        foreach ($this->errors[$property] as $error) {
-            if ($error['errorKey'] === $errorKey) {
-                return;
-            }
+        $hash = md5($errorKey . $message);
+        if (isset($this->errorHashes[$property][$hash])) {
+            return;
         }
 
+        $this->errorHashes[$property][$hash] = true;
         $this->errors[$property][] = [
             'errorKey' => $errorKey,
             'message' => $message,
@@ -57,5 +72,10 @@ class ValidationResult implements ValidationResultContract
             'errors' => $this->errors,
             'validatedData' => $this->validatedData,
         ];
+    }
+
+    public function __destruct()
+    {
+        $this->reset();
     }
 }

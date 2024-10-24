@@ -6,7 +6,6 @@ namespace KaririCode\Tests\Validator;
 
 use KaririCode\Contract\Processor\ProcessorRegistry;
 use KaririCode\Validator\Attribute\Validate;
-use KaririCode\Validator\Contract\ValidationResultProcessor;
 use KaririCode\Validator\Processor\Input\EmailValidator;
 use KaririCode\Validator\Processor\Logic\RequiredValidator;
 use KaririCode\Validator\ValidationResult;
@@ -17,13 +16,11 @@ use PHPUnit\Framework\TestCase;
 class ValidatorTest extends TestCase
 {
     private ProcessorRegistry|MockObject $registry;
-    private ValidationResultProcessor|MockObject $resultProcessor;
     private Validator $validator;
 
     protected function setUp(): void
     {
         $this->registry = $this->createMock(ProcessorRegistry::class);
-        $this->resultProcessor = $this->createMock(ValidationResultProcessor::class);
 
         $this->registry->method('get')
             ->willReturnMap([
@@ -31,7 +28,7 @@ class ValidatorTest extends TestCase
                 ['validator', 'email', new EmailValidator()],
             ]);
 
-        $this->validator = new Validator($this->registry, $this->resultProcessor);
+        $this->validator = new Validator($this->registry);
     }
 
     public function testValidateWithValidObject(): void
@@ -43,11 +40,6 @@ class ValidatorTest extends TestCase
 
         $expectedResult = new ValidationResult();
         $expectedResult->setValidatedData('email', 'walmir.silva@example.com');
-
-        $this->resultProcessor
-            ->expects($this->once())
-            ->method('process')
-            ->willReturn($expectedResult);
 
         $result = $this->validator->validate($testObject);
 
@@ -65,11 +57,6 @@ class ValidatorTest extends TestCase
         $resultWithErrors = new ValidationResult();
         $resultWithErrors->addError('email', 'invalidFormat', 'Invalid email format');
 
-        $this->resultProcessor
-            ->expects($this->once())
-            ->method('process')
-            ->willReturn($resultWithErrors);
-
         $result = $this->validator->validate($testObject);
 
         $this->assertTrue($result->hasErrors());
@@ -82,13 +69,6 @@ class ValidatorTest extends TestCase
             public string $name = 'Test';
         };
 
-        $emptyResult = new ValidationResult();
-
-        $this->resultProcessor
-            ->expects($this->once())
-            ->method('process')
-            ->willReturn($emptyResult);
-
         $result = $this->validator->validate($testObject);
 
         $this->assertFalse($result->hasErrors());
@@ -98,13 +78,6 @@ class ValidatorTest extends TestCase
     public function testValidateWithNullObject(): void
     {
         $testObject = new \stdClass();
-
-        $emptyResult = new ValidationResult();
-
-        $this->resultProcessor
-            ->expects($this->once())
-            ->method('process')
-            ->willReturn($emptyResult);
 
         $result = $this->validator->validate($testObject);
 
@@ -127,11 +100,6 @@ class ValidatorTest extends TestCase
         $multiPropertyResult = new ValidationResult();
         $multiPropertyResult->setValidatedData('name', 'Walmir');
         $multiPropertyResult->setValidatedData('email', 'walmir.silva@example.com');
-
-        $this->resultProcessor
-            ->expects($this->once())
-            ->method('process')
-            ->willReturn($multiPropertyResult);
 
         $result = $this->validator->validate($testObject);
 
