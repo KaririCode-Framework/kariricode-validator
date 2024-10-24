@@ -16,6 +16,8 @@ class EmailValidator extends AbstractValidatorProcessor
             return $input;
         }
 
+        $input = trim($input);
+
         if (false === filter_var($input, FILTER_VALIDATE_EMAIL)) {
             $this->setInvalid('invalidFormat');
         }

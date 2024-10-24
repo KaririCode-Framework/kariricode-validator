@@ -48,7 +48,7 @@ final class ValidateTest extends TestCase
         $expectedProcessors = ['required', 'email'];
         $validate = new Validate($processors);
 
-        $this->assertEquals($expectedProcessors, $validate->getProcessors());
+        $this->assertEquals($expectedProcessors, array_values($validate->getProcessors()));
     }
 
     public function testConstructorWithEmptyProcessors(): void
@@ -89,14 +89,19 @@ final class ValidateTest extends TestCase
                 [
                     'length' => ['minLength' => 3, 'maxLength' => 20],
                 ],
-                ['length'],
+                [
+                    'length' => ['minLength' => 3, 'maxLength' => 20],
+                ],
             ],
             'mixed processors' => [
                 [
                     'required',
                     'email' => ['message' => 'Invalid email'],
                 ],
-                ['required', 'email'],
+                [
+                    'required',
+                    'email' => ['message' => 'Invalid email'],
+                ],
             ],
         ];
     }

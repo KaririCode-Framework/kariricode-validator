@@ -12,6 +12,15 @@ abstract class AbstractValidatorProcessor implements Processor, ValidatableProce
     protected bool $isValid = true;
     protected string $errorKey = '';
 
+    /**
+     * Reset the processor's state back to its initial values.
+     */
+    public function reset(): void
+    {
+        $this->isValid = true;
+        $this->errorKey = '';
+    }
+
     protected function setInvalid(string $errorKey): void
     {
         $this->isValid = false;
