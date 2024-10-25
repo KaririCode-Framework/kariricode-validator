@@ -122,7 +122,7 @@ function runTestCases(Validator $validator): void
     // Test Case 1: Valid User
     echo "\n\033[1mTest Case 1: Valid User\033[0m\n";
     $validUser = new User();
-    $validUser->setName('Walmir Silva');
+    $validUser->setName('Wa');
     $validUser->setEmail('walmir.silva@example.com');
     $validUser->setAge(25);
 

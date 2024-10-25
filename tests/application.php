@@ -203,7 +203,7 @@ $validationResult4 = $validator->validate($emptyFieldsUser);
 displayValidationResult($validationResult4);
 
 // Example of using validated data (for the valid case)
-if (!$validationResult1->hasErrors()) {
+if ($validationResult1->isValid()) {
     $validatedData = $validationResult1->getValidatedData();
     echo "Using validated data:\n";
     echo "Creating user account for: {$validatedData['username']}\n";
@@ -217,7 +217,7 @@ if (!$validationResult1->hasErrors()) {
 function displayValidationResult(ValidationResult $result): void
 {
     $displayedErrors = [];
-    if ($result->hasErrors()) {
+    if ($result->isValid()) {
         echo "Validation failed. Errors:\n";
 
         foreach ($result->getErrors() as $property => $errors) {

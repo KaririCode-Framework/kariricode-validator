@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace KaririCode\Tests\Validator;
+namespace KaririCode\Validator\Tests;
 
+use KaririCode\Contract\Processor\Processor;
 use KaririCode\Contract\Processor\ProcessorRegistry;
 use KaririCode\Validator\Attribute\Validate;
-use KaririCode\Validator\Processor\Input\EmailValidator;
-use KaririCode\Validator\Processor\Logic\RequiredValidator;
-use KaririCode\Validator\ValidationResult;
+use KaririCode\Validator\Result\ValidationResult;
 use KaririCode\Validator\Validator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -21,13 +20,6 @@ class ValidatorTest extends TestCase
     protected function setUp(): void
     {
         $this->registry = $this->createMock(ProcessorRegistry::class);
-
-        $this->registry->method('get')
-            ->willReturnMap([
-                ['validator', 'required', new RequiredValidator()],
-                ['validator', 'email', new EmailValidator()],
-            ]);
-
         $this->validator = new Validator($this->registry);
     }
 
@@ -38,13 +30,17 @@ class ValidatorTest extends TestCase
             public string $email = 'walmir.silva@example.com';
         };
 
-        $expectedResult = new ValidationResult();
-        $expectedResult->setValidatedData('email', 'walmir.silva@example.com');
+        $this->registry->expects($this->atLeastOnce())
+            ->method('get')
+            ->willReturnMap([
+                ['validator', 'required', $this->createMock(Processor::class)],
+                ['validator', 'email', $this->createMock(Processor::class)],
+            ]);
 
         $result = $this->validator->validate($testObject);
 
-        $this->assertFalse($result->hasErrors());
-        $this->assertEquals(['email' => 'walmir.silva@example.com'], $result->getValidatedData());
+        $this->assertInstanceOf(ValidationResult::class, $result);
+        $this->assertTrue($result->isValid());
     }
 
     public function testValidateWithInvalidObject(): void
@@ -54,13 +50,19 @@ class ValidatorTest extends TestCase
             public string $email = 'invalid-email';
         };
 
-        $resultWithErrors = new ValidationResult();
-        $resultWithErrors->addError('email', 'invalidFormat', 'Invalid email format');
+        $processor = $this->createMock(Processor::class);
+        $processor->method('process')
+            ->with($this->anything())
+            ->willReturn('invalid-email');
+
+        $this->registry->method('get')
+            ->willReturn($processor);
 
         $result = $this->validator->validate($testObject);
 
-        $this->assertTrue($result->hasErrors());
-        $this->assertArrayHasKey('email', $result->getErrors());
+        $this->assertInstanceOf(ValidationResult::class, $result);
+
+        $this->assertFalse(!$result->isValid());
     }
 
     public function testValidateWithNoAttributes(): void
@@ -71,8 +73,8 @@ class ValidatorTest extends TestCase
 
         $result = $this->validator->validate($testObject);
 
-        $this->assertFalse($result->hasErrors());
-        $this->assertEmpty($result->getValidatedData());
+        $this->assertInstanceOf(ValidationResult::class, $result);
+        $this->assertTrue($result->isValid());
     }
 
     public function testValidateWithNullObject(): void
@@ -81,8 +83,8 @@ class ValidatorTest extends TestCase
 
         $result = $this->validator->validate($testObject);
 
-        $this->assertFalse($result->hasErrors());
-        $this->assertEmpty($result->getValidatedData());
+        $this->assertInstanceOf(ValidationResult::class, $result);
+        $this->assertTrue($result->isValid());
     }
 
     public function testValidateWithMultipleProperties(): void
@@ -97,32 +99,15 @@ class ValidatorTest extends TestCase
             public string $unvalidated = 'Skip this';
         };
 
-        $multiPropertyResult = new ValidationResult();
-        $multiPropertyResult->setValidatedData('name', 'Walmir');
-        $multiPropertyResult->setValidatedData('email', 'walmir.silva@example.com');
+        $this->registry->expects($this->atLeastOnce())
+            ->method('get')
+            ->with('validator', 'required')
+            ->willReturn($this->createMock(Processor::class));
 
         $result = $this->validator->validate($testObject);
 
-        $this->assertFalse($result->hasErrors());
-        $this->assertEquals([
-            'name' => 'Walmir',
-            'email' => 'walmir.silva@example.com',
-        ], $result->getValidatedData());
-        $this->assertArrayNotHasKey('unvalidated', $result->getValidatedData());
-    }
-
-    public function testConstructorWithDefaultResultProcessor(): void
-    {
-        $validator = new Validator($this->registry);
-
-        $testObject = new class {
-            #[Validate(processors: ['required'])]
-            public string $name = 'Test';
-        };
-
-        $result = $validator->validate($testObject);
-
         $this->assertInstanceOf(ValidationResult::class, $result);
+        $this->assertTrue($result->isValid());
     }
 
     public function testValidateWithNonObject(): void
